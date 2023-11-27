@@ -14,10 +14,40 @@
   "contributes": {
     "commands": [
       {
-        "command": "bettergpt.helloWorld",
-        "title": "Hello World"
+        "command": "bettergpt.translate",
+        "title": "BetterGPT: Translate"
+      },
+      {
+        "command": "bettergpt.grammar",
+        "title": "BetterGPT: Grammar"
       }
-    ]
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "when": "editorHasSelection",
+          "command": "bettergpt.translate",
+          "group": "bettergpt@1"
+        },
+        {
+          "when": "editorHasSelection",
+          "command": "bettergpt.grammar",
+          "group": "bettergpt@2"
+        }
+      ]
+    },
+    "configuration": {
+      "type": "object",
+      "title": "BetterGPT",
+      "properties": {
+        "bettergpt.openAIApiKey": {
+          "type": "string",
+          "default": "",
+          "title": "OpenAI API Key",
+          "description": "API Key for OpenAI"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "pnpm run compile",
@@ -28,15 +58,19 @@
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.84.0",
     "@types/mocha": "^10.0.3",
     "@types/node": "18.x",
+    "@types/vscode": "^1.84.0",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
+    "@vscode/test-electron": "^2.3.6",
     "eslint": "^8.52.0",
     "glob": "^10.3.10",
     "mocha": "^10.2.0",
-    "typescript": "^5.2.2",
-    "@vscode/test-electron": "^2.3.6"
+    "ts-node": "^10.9.1",
+    "typescript": "^5.3.2"
+  },
+  "dependencies": {
+    "openai": "^4.20.0"
   }
 }
