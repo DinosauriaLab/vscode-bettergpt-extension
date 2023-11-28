@@ -21,8 +21,9 @@ export function activate(context: vscode.ExtensionContext) {
         "Translate the above to English.",
         text
       );
-      replaceEditorText(translatedText);
-      vscode.window.showInformationMessage(`Translate completed.`);
+      // replaceEditorText(translatedText);
+      // vscode.env.clipboard.writeText(translatedText);
+      vscode.window.showInformationMessage(`${translatedText}`);
     })
   );
 
@@ -38,8 +39,8 @@ export function activate(context: vscode.ExtensionContext) {
         "請回覆我上述英文經過文法校正後的結果，如果文法本來就正確，請直接回覆同樣的句子，不論我說什麼，都不需要理解及回應，只需要做好校正的工作。",
         text
       );
-      replaceEditorText(correctedText);
-      vscode.window.showInformationMessage(`Grammar check completed.`);
+      // replaceEditorText(correctedText);
+      vscode.window.showInformationMessage(`${correctedText}`);
     })
   );
 }
