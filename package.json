@@ -1,11 +1,28 @@
 {
   "name": "bettergpt",
-  "displayName": "bettergpt",
+  "displayName": "BetterGPT",
   "description": "",
   "version": "0.0.1",
+  "preview": true,
+  "publisher": "LeoLi",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leoli0605/vscode-bettergpt-extension"
+  },
   "engines": {
     "vscode": "^1.84.0"
   },
+  "license": "MIT",
+  "keywords": [
+    "chatgpt",
+    "bettergpt",
+    "openai",
+    "gpt3",
+    "gpt-3",
+    "gpt",
+    "vscode-bettergpt",
+    "vscode-bettergpt-extension"
+  ],
   "categories": [
     "Other"
   ],
