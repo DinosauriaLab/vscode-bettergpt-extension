@@ -57,7 +57,7 @@
       "type": "object",
       "title": "BetterGPT",
       "properties": {
-        "bettergpt.openAIApiKey": {
+        "bettergpt.openaiApiKey": {
           "type": "string",
           "default": "",
           "title": "OpenAI API Key",
