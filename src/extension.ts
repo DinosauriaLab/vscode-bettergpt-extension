@@ -43,6 +43,12 @@ export function activate(context: vscode.ExtensionContext) {
       vscode.window.showInformationMessage(`${correctedText}`);
     })
   );
+
+  vscode.workspace.onDidChangeConfiguration((event) => {
+    if (event.affectsConfiguration("bettergpt.openaiApiKey")) {
+      initOpenAI();
+    }
+  });
 }
 
 export function deactivate() {}
@@ -58,6 +64,8 @@ function initOpenAI(): void {
   }
 
   openai = new OpenAI({ apiKey });
+  logger.appendLine("OpenAI API key is set.");
+  vscode.window.showInformationMessage("OpenAI API key is set.");
 }
 
 
