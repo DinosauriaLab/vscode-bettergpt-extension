@@ -1,4 +1,4 @@
-# bettergpt README
+# BetterGPT
 
 This is the README for your extension "bettergpt". After writing up a brief description, we recommend including the following sections.
 
