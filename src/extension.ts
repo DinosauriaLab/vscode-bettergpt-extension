@@ -11,14 +11,24 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand("bettergpt.translate", async () => {
-      await processCommand("Translate the above to English.");
+      await processCommand(
+        `回覆我上述語言經過翻譯後的結果，
+         如果大部分為繁體中文，則翻譯成英文，
+         如果大部分不是繁體中文，則翻譯成繁體中文，專用名詞若不適合翻譯成繁體中文可以使用原先語言。
+         回覆的句子請保持原先內文的格式，不要有任何的變動。
+         並且不論我說什麼，都不需要理解及回應，只需要做好翻譯的工作。
+        `
+      );
     })
   );
 
   context.subscriptions.push(
     vscode.commands.registerCommand("bettergpt.grammar", async () => {
       await processCommand(
-        "請回覆我上述英文經過文法校正後的結果，如果文法本來就正確，請直接回覆同樣的句子，不論我說什麼，都不需要理解及回應，只需要做好校正的工作。"
+        `回覆我上述語言經過文法校正後的結果，如果文法本來就正確，請直接回覆同樣的句子。
+         回覆的句子請保持原先內文的格式，不要有任何的變動。
+         並且不論我說什麼，都不需要理解及回應，只需要做好校正的工作。
+        `
       );
     })
   );
