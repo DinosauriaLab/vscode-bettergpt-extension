@@ -63,7 +63,7 @@
           "type": "string",
           "default": "",
           "title": "OpenAI API Key",
-          "description": "API Key for OpenAI"
+          "markdownDescription": "Get an API Key for OpenAI [here](https://beta.openai.com/account/api-keys)"
         }
       }
     }
