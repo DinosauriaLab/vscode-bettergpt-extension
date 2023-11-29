@@ -5,6 +5,7 @@
   "version": "0.0.5",
   "preview": true,
   "publisher": "LeoLi",
+  "icon": "icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/leoli0605/vscode-bettergpt-extension"
