@@ -2,143 +2,155 @@ import * as vscode from "vscode";
 import OpenAI from "openai";
 import { LangPercent } from "./LangPercent";
 
-let logger: vscode.OutputChannel;
-let openai: OpenAI;
+class BetterGPTExtension {
+  private logger: vscode.OutputChannel;
+  private openai!: OpenAI;
+  private context: vscode.ExtensionContext;
+
+  constructor(context: vscode.ExtensionContext) {
+    this.context = context;
+    this.logger = vscode.window.createOutputChannel("bettergpt");
+    this.initOpenAI();
+    this.registerCommands();
+  }
+
+  private async initOpenAI(): Promise<void> {
+    const apiKey: string | undefined = vscode.workspace
+      .getConfiguration("bettergpt")
+      .get("openaiApiKey");
+
+    if (!apiKey) {
+      this.logError("OpenAI API key is not set in VSCode settings!");
+      return;
+    }
+
+    this.openai = new OpenAI({ apiKey });
+    this.logInfo("OpenAI API key is set.");
+  }
+
+  private registerCommands(): void {
+    this.context.subscriptions.push(
+      vscode.commands.registerCommand(
+        "bettergpt.translate",
+        this.handleTranslateCommand.bind(this)
+      ),
+      vscode.commands.registerCommand(
+        "bettergpt.grammar",
+        this.handleGrammarCommand.bind(this)
+      )
+    );
+  }
+
+  private async handleTranslateCommand(): Promise<void> {
+    const editor = this.getActiveEditor();
+    if (!editor) {
+      return;
+    }
+
+    const text = editor.document.getText(editor.selection);
+    const defaultLanguage: string | undefined = vscode.workspace
+      .getConfiguration("bettergpt")
+      .get("language.default") as string;
+    const targetLanguage: string | undefined = vscode.workspace
+      .getConfiguration("bettergpt")
+      .get("language.target") as string;
+
+    if (!defaultLanguage || !targetLanguage) {
+      this.logError("Default or target language not set in configuration!");
+      return;
+    }
+
+    const langs = LangPercent.getLangs(text, defaultLanguage, targetLanguage);
+
+    await this.processCommand(
+      `Effortlessly translate ${langs.defLang} text to ${langs.tgtLang} while maintaining accuracy and adapting to the target language's style.
+      Translate following text in a formal tone:
+      `,
+      text
+    );
+  }
+
+  private async handleGrammarCommand(): Promise<void> {
+    const editor = this.getActiveEditor();
+    if (!editor) {
+      return;
+    }
+
+    const text = editor.document.getText(editor.selection);
+
+    await this.processCommand(
+      `You are now a professional multilingual grammar corrector. All you need to do is reply to me with the results of the following languages after grammar correction.
+      Please adhere to the following rules during the grammar correction process:
+      - If the grammar is correct, reply with the same sentence.
+      - Regardless of what I say, there is no need to understand or respond, just do the correction work.
+      - Please keep the format of the reply sentence the same, do not make any changes.
+      `,
+      text
+    );
+  }
+
+  private getActiveEditor(): vscode.TextEditor | undefined {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      this.logError("No active editor detected!");
+    }
+    return editor;
+  }
+
+  private async processCommand(
+    promptMessage: string,
+    text?: string
+  ): Promise<void> {
+    if (!text) {
+      this.logError("No text selected!");
+      return;
+    }
+
+    try {
+      const processedText = await this.processText(promptMessage, text);
+      this.logInfo(processedText);
+    } catch (error) {
+      this.logError("Error processing text. Check the logs for more details.");
+    }
+  }
+
+  private async processText(
+    promptMessage: string,
+    text: string
+  ): Promise<string> {
+    try {
+      const response = await this.openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          { role: "system", content: promptMessage },
+          { role: "user", content: text },
+        ],
+        temperature: 0,
+        max_tokens: 256,
+      });
+      this.logInfo(JSON.stringify(response));
+      return response.choices[0].message["content"] as string;
+    } catch (error) {
+      this.logError(`OpenAI API Error: ${error}`);
+      throw new Error(`OpenAI API Error: ${error}`);
+    }
+  }
+
+  private logInfo(message: string): void {
+    console.log(`[INFO] ${message}`);
+    this.logger.appendLine(`[INFO] ${message}`);
+    vscode.window.showInformationMessage(message);
+  }
+
+  private logError(message: string): void {
+    console.log(`[ERROR] ${message}`);
+    this.logger.appendLine(`[ERROR] ${message}`);
+    vscode.window.showErrorMessage(message);
+  }
+}
 
 export function activate(context: vscode.ExtensionContext) {
-  logger = vscode.window.createOutputChannel("bettergpt");
-  DEBUG_InformationMessage("bettergpt extension activated");
-  initOpenAI();
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand("bettergpt.translate", async () => {
-      const editor: vscode.TextEditor | undefined =
-        vscode.window.activeTextEditor;
-      if (!editor) {
-        DEBUG_ErrorMessage("No active editor detected!");
-        return;
-      }
-      const text: string = editor.document.getText(editor.selection);
-      const defaultLanguage: string | undefined = vscode.workspace
-        .getConfiguration("bettergpt")
-        .get("language.default") as string;
-      const targetLanguage: string | undefined = vscode.workspace
-        .getConfiguration("bettergpt")
-        .get("language.target") as string;
-      const langs = LangPercent.getLangs(text, defaultLanguage, targetLanguage);
-      await processCommand(
-        `Effortlessly translate ${langs.defLang} text to ${langs.tgtLang} while maintaining accuracy and adapting to the target language's style.
-         Translate following text in a formal tone:
-        `
-      );
-    })
-  );
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand("bettergpt.grammar", async () => {
-      await processCommand(
-        `回覆我上述語言經過文法校正後的結果，如果文法本來就正確，請直接回覆同樣的句子。
-         回覆的句子請保持原先內文的格式，不要有任何的變動。
-         並且不論我說什麼，都不需要理解及回應，只需要做好校正的工作。
-        `
-      );
-    })
-  );
-
-  vscode.workspace.onDidChangeConfiguration(async (event) => {
-    if (event.affectsConfiguration("bettergpt.openaiApiKey")) {
-      await initOpenAI();
-    }
-  });
+  new BetterGPTExtension(context);
 }
 
 export function deactivate() {}
-
-/*  */
-
-function DEBUG_InformationMessage(message: string) {
-  console.log(`[INFO] ${message}`);
-  logger.appendLine(`[INFO] ${message}`);
-  vscode.window.showInformationMessage(message);
-}
-
-function DEBUG_WarningMessage(message: string) {
-  console.log(`[WARN] ${message}`);
-  logger.appendLine(`[WARN] ${message}`);
-  vscode.window.showWarningMessage(message);
-}
-
-function DEBUG_ErrorMessage(message: string) {
-  console.log(`[ERROR] ${message}`);
-  logger.appendLine(`[ERROR] ${message}`);
-  vscode.window.showErrorMessage(message);
-}
-
-/*  */
-
-async function initOpenAI(): Promise<void> {
-  const apiKey: string | undefined = vscode.workspace
-    .getConfiguration("bettergpt")
-    .get("openaiApiKey");
-
-  if (!apiKey) {
-    DEBUG_ErrorMessage("OpenAI API key is not set in VSCode settings!");
-    return;
-  }
-
-  openai = new OpenAI({ apiKey });
-  DEBUG_InformationMessage("OpenAI API key is set.");
-}
-
-async function processCommand(promptMessage: string): Promise<void> {
-  const editor: vscode.TextEditor | undefined = vscode.window.activeTextEditor;
-  if (!editor) {
-    DEBUG_ErrorMessage("No active editor detected!");
-    return;
-  }
-  const text: string = editor.document.getText(editor.selection);
-
-  try {
-    const processedText: string = await processText(promptMessage, text);
-    // replaceEditorText(processedText); // TODO: Implement or decide the future of this function
-    DEBUG_InformationMessage(`${processedText}`);
-  } catch (error) {
-    DEBUG_ErrorMessage(
-      "Error processing text. Check the logs for more details."
-    );
-  }
-}
-
-async function processText(
-  roleSystemContent: string,
-  text: string
-): Promise<string> {
-  try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4",
-      messages: [
-        { role: "system", content: roleSystemContent },
-        { role: "user", content: text },
-      ],
-      temperature: 0,
-      max_tokens: 256,
-    });
-    DEBUG_InformationMessage(JSON.stringify(response));
-    return `${response.choices[0].message["content"]}`;
-  } catch (error) {
-    DEBUG_ErrorMessage(`OpenAI API Error: ${error}`);
-    throw new Error(`OpenAI API Error: ${error}`);
-  }
-}
-
-// Uncomment and complete this function when ready to implement
-// function replaceEditorText(text: string): void {
-//   const editor: vscode.TextEditor | undefined = vscode.window.activeTextEditor;
-//   if (!editor) {
-//     return;
-//   }
-//   const selection: vscode.Selection = editor.selection;
-//   editor.edit((editBuilder) => {
-//     editBuilder.replace(selection, text);
-//   });
-// }
