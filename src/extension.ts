@@ -1,15 +1,22 @@
 import * as vscode from "vscode";
 import OpenAI from "openai";
 import { LangPercent } from "./LangPercent";
+import { GPTComment } from "./GPTComment";
 
 class BetterGPTExtension {
   private logger: vscode.OutputChannel;
   private openai!: OpenAI;
   private context: vscode.ExtensionContext;
+  private commentController!: vscode.CommentController;
 
   constructor(context: vscode.ExtensionContext) {
     this.context = context;
     this.logger = vscode.window.createOutputChannel("bettergpt");
+    this.commentController = vscode.comments.createCommentController(
+      "bettergpt-comments",
+      "BetterGPT Comments"
+    );
+    context.subscriptions.push(this.commentController);
     this.initOpenAI();
     this.registerCommands();
   }
@@ -37,6 +44,14 @@ class BetterGPTExtension {
       vscode.commands.registerCommand(
         "bettergpt.grammar",
         this.handleGrammarCommand.bind(this)
+      ),
+      vscode.commands.registerCommand(
+        "bettergpt.shortcut.replace",
+        this.handleReplaceTextCommand.bind(this)
+      ),
+      vscode.commands.registerCommand(
+        "bettergpt.shortcut.insert",
+        this.handleInsertTextCommand.bind(this)
       )
     );
   }
@@ -89,12 +104,52 @@ class BetterGPTExtension {
     );
   }
 
+  private handleReplaceTextCommand(
+    editor: vscode.TextEditor,
+    range: vscode.Range,
+    text: string
+  ): void {
+    this.logInfo(`Not implemented yet!`);
+    editor.edit((editBuilder) => {
+      editBuilder.replace(range, text);
+    });
+  }
+
+  private handleInsertTextCommand(
+    editor: vscode.TextEditor,
+    range: vscode.Range,
+    text: string
+  ): void {
+    this.logInfo(`Not implemented yet!`);
+    editor.edit((editBuilder) => {
+      editBuilder.insert(range.end, text);
+    });
+  }
+
   private getActiveEditor(): vscode.TextEditor | undefined {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
       this.logError("No active editor detected!");
     }
     return editor;
+  }
+
+  private async createCommentThread(
+    editor: vscode.TextEditor,
+    processedText: string
+  ): Promise<void> {
+    const range = editor.selection;
+    const thread = this.commentController.createCommentThread(
+      editor.document.uri,
+      range,
+      []
+    );
+    thread.canReply = false;
+    thread.collapsibleState = vscode.CommentThreadCollapsibleState.Expanded;
+
+    const comment = new GPTComment(processedText, { name: "BetterGPT", });
+
+    thread.comments = [comment];
   }
 
   private async processCommand(
@@ -108,7 +163,10 @@ class BetterGPTExtension {
 
     try {
       const processedText = await this.processText(promptMessage, text);
-      this.logInfo(processedText);
+      const editor = this.getActiveEditor();
+      if (editor) {
+        await this.createCommentThread(editor, processedText);
+      }
     } catch (error) {
       this.logError("Error processing text. Check the logs for more details.");
     }

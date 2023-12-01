@@ -40,6 +40,16 @@
       {
         "command": "bettergpt.grammar",
         "title": "BetterGPT: Grammar"
+      },
+      {
+        "command": "bettergpt.shortcut.replace",
+        "title": "Replace Selected Text",
+        "enablement": "commentController == bettergpt-comments"
+      },
+      {
+        "command": "bettergpt.shortcut.insert",
+        "title": "Insert Text",
+        "enablement": "commentController == bettergpt-comments"
       }
     ],
     "menus": {
@@ -53,6 +63,28 @@
           "when": "editorHasSelection",
           "command": "bettergpt.grammar",
           "group": "bettergpt@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "bettergpt.shortcut.replace",
+          "when": "false"
+        },
+        {
+          "command": "bettergpt.shortcut.insert",
+          "when": "false"
+        }
+      ],
+      "comments/commentThread/title": [
+        {
+          "command": "bettergpt.shortcut.replace",
+          "group": "inline",
+          "when": "commentController == bettergpt-comments"
+        },
+        {
+          "command": "bettergpt.shortcut.insert",
+          "group": "inline",
+          "when": "commentController == bettergpt-comments"
         }
       ]
     },
