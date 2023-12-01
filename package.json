@@ -65,6 +65,30 @@
           "default": "",
           "title": "OpenAI API Key",
           "markdownDescription": "Get an API Key for OpenAI [here](https://beta.openai.com/account/api-keys)"
+        },
+        "bettergpt.language.default": {
+          "type": "string",
+          "default": "English",
+          "enum": [
+            "繁體中文",
+            "简体中文",
+            "日本語",
+            "English"
+          ],
+          "title": "Default Language",
+          "markdownDescription": "The default language for translation and grammar correction"
+        },
+        "bettergpt.language.target": {
+          "type": "string",
+          "default": "繁體中文",
+          "enum": [
+            "繁體中文",
+            "简体中文",
+            "日本語",
+            "English"
+          ],
+          "title": "Target Language",
+          "markdownDescription": "The target language for translation and grammar correction"
         }
       }
     }

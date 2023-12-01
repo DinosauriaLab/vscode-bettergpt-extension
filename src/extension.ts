@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import OpenAI from "openai";
+import { LangPercent } from "./LangPercent";
 
 let logger: vscode.OutputChannel;
 let openai: OpenAI;
@@ -11,12 +12,23 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.commands.registerCommand("bettergpt.translate", async () => {
+      const editor: vscode.TextEditor | undefined =
+        vscode.window.activeTextEditor;
+      if (!editor) {
+        DEBUG_ErrorMessage("No active editor detected!");
+        return;
+      }
+      const text: string = editor.document.getText(editor.selection);
+      const defaultLanguage: string | undefined = vscode.workspace
+        .getConfiguration("bettergpt")
+        .get("language.default") as string;
+      const targetLanguage: string | undefined = vscode.workspace
+        .getConfiguration("bettergpt")
+        .get("language.target") as string;
+      const langs = LangPercent.getLangs(text, defaultLanguage, targetLanguage);
       await processCommand(
-        `回覆我上述語言經過翻譯後的結果，
-         如果大部分為繁體中文，則翻譯成英文，
-         如果大部分不是繁體中文，則翻譯成繁體中文，專用名詞若不適合翻譯成繁體中文可以使用原先語言。
-         回覆的句子請保持原先內文的格式，不要有任何的變動。
-         並且不論我說什麼，都不需要理解及回應，只需要做好翻譯的工作。
+        `Effortlessly translate ${langs.defLang} text to ${langs.tgtLang} while maintaining accuracy and adapting to the target language's style.
+         Translate following text in a formal tone:
         `
       );
     })
@@ -105,9 +117,8 @@ async function processText(
     const response = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
-        { role: "system", content: "You are a helpful assistant." },
-        { role: "user", content: text },
         { role: "system", content: roleSystemContent },
+        { role: "user", content: text },
       ],
       temperature: 0,
       max_tokens: 256,
