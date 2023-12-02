@@ -43,12 +43,12 @@
       },
       {
         "command": "bettergpt.shortcut.replace",
-        "title": "Replace Selected Text",
+        "title": "Replace",
         "enablement": "commentController == bettergpt-comments"
       },
       {
         "command": "bettergpt.shortcut.insert",
-        "title": "Insert Text",
+        "title": "Insert",
         "enablement": "commentController == bettergpt-comments"
       }
     ],
@@ -75,15 +75,15 @@
           "when": "false"
         }
       ],
-      "comments/commentThread/title": [
+      "comments/comment/title": [
         {
           "command": "bettergpt.shortcut.replace",
-          "group": "inline",
+          "group": "inline@1",
           "when": "commentController == bettergpt-comments"
         },
         {
           "command": "bettergpt.shortcut.insert",
-          "group": "inline",
+          "group": "inline@2",
           "when": "commentController == bettergpt-comments"
         }
       ]
