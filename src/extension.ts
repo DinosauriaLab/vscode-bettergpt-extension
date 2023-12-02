@@ -176,6 +176,10 @@ class BetterGPTExtension {
 
     try {
       const processedText = await this.processText(promptMessage, text);
+      const enableCopy = vscode.workspace.getConfiguration("bettergpt").get("enableCopy");
+      if (enableCopy) {
+        vscode.env.clipboard.writeText(processedText);
+      }
       const editor = this.getActiveEditor();
       if (editor) {
         await this.createCommentThread(editor, processedText);

@@ -121,6 +121,12 @@
           ],
           "title": "Target Language",
           "markdownDescription": "The target language for translation and grammar correction"
+        },
+        "bettergpt.enableCopy": {
+          "type": "boolean",
+          "default": true,
+          "title": "Enable Copy",
+          "markdownDescription": "Enable copy button in the translation and grammar correction results"
         }
       }
     }
